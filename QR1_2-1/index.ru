@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Перенаправление...</title>
     
-    <meta http-equiv="refresh" content="0; url=ЗДЕСЬ_ВАША_РЕАЛЬНАЯ_ССЫЛКА">
+    <meta http-equiv="refresh" content="0; url=https://www.eprussia.ru/epr/71/4912.htm">
     
     <script>
-        window.location.href = "ЗДЕСЬ_ВАША_РЕАЛЬНАЯ_ССЫЛКА";
+        window.location.href = "https://www.eprussia.ru/epr/71/4912.htm";
     </script>
     
     <style>
