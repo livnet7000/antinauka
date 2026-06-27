@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Перенаправление...</title>
     
-    <meta http-equiv="refresh" content="0; url=https://ru.wikipedia.org/wiki/Комиссия_для_рассмотрения_медиумических_явлений">
+    <meta http-equiv="refresh" content="0; url=https://cyberleninka.ru/article/n/filosofsko-antropologicheskie-dopuscheniya-a-n-aksakova-i-a-m-butlerova-v-issledovaniyah-mediumizma">
     
     <script>
-        window.location.href = "https://ru.wikipedia.org/wiki/Комиссия_для_рассмотрения_медиумических_явлений";
+        window.location.href = "https://cyberleninka.ru/article/n/filosofsko-antropologicheskie-dopuscheniya-a-n-aksakova-i-a-m-butlerova-v-issledovaniyah-mediumizma";
     </script>
     
     <style>
@@ -19,6 +19,6 @@
 </head>
 <body>
     <p>Перенаправляем на материал...</p>
-    <p>Если ничего не произошло, <a href="https://ru.wikipedia.org/wiki/Комиссия_для_рассмотрения_медиумических_явлений">нажмите здесь</a>.</p>
+    <p>Если ничего не произошло, <a href="https://cyberleninka.ru/article/n/filosofsko-antropologicheskie-dopuscheniya-a-n-aksakova-i-a-m-butlerova-v-issledovaniyah-mediumizma">нажмите здесь</a>.</p>
 </body>
 </html>
