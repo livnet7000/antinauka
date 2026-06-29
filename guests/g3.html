@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Квест: Тест на концентрацию</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            background: #f4f7f6; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+        .container { 
+            max-width: 600px; 
+            width: 100%;
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        }
+        h1 { color: #2c3e50; font-size: 1.5em; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+        h2 { color: #2c3e50; font-size: 1.2em; text-align: center;}
+        p { margin-bottom: 15px; }
+        
+        .section { display: none; animation: fadeIn 0.4s; }
+        .section.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn { 
+            display: block; 
+            width: 100%; 
+            background: #3498db; 
+            color: #fff; 
+            border: none; 
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            font-size: 1em; 
+            cursor: pointer; 
+            transition: background 0.2s, transform 0.1s; 
+            margin-top: 20px;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn:hover { background: #2980b9; }
+        .btn:active { transform: scale(0.98); }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1.1em;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .timer-box {
+            background: #e74c3c;
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        .timer-box.warning { background: #c0392b; animation: pulse 1s infinite; }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .text-reading-area {
+            position: relative;
+            background: #f9fbfd;
+            border: 1px solid #dcdde1;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 1.05em;
+            line-height: 1.8;
+            text-align: justify;
+            overflow: hidden; 
+        }
+
+        .text-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ОТВЛЕКАЮЩИЕ ФИГУРЫ (ВИЗУАЛЬНЫЙ ШУМ) */
+        .distractor {
+            position: absolute;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.092; 
+        }
+        .shape-circle {
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            border: 10px solid #3498db;
+            top: -20px; left: 10%;
+            animation: floatCircle 10s infinite alternate ease-in-out;
+        }
+        .shape-square {
+            width: 80px; height: 80px;
+            background: #2ecc71;
+            bottom: 10%; right: 5%;
+            animation: rotateSquare 15s infinite linear;
+        }
+        .shape-triangle {
+            width: 0; height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 86px solid #e74c3c;
+            top: 40%; right: 40%;
+            animation: floatTriangle 12s infinite alternate ease-in-out;
+        }
+
+        @keyframes floatCircle { 0% { transform: translate(0, 0); } 100% { transform: translate(150px, 80px); } }
+        @keyframes rotateSquare { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes floatTriangle { 0% { transform: translate(0, 0) rotate(10deg); } 100% { transform: translate(-100px, -50px) rotate(-20deg); } }
+
+        /* ИСПРАВЛЕННАЯ ГОРИЛЛА: ДВИЖЕНИЕ НАИСКОСОК ПО ЛЕВОМУ НИЖНЕМУ УГЛУ */
+        .gorilla-walker {
+            position: absolute;
+            font-size: 260px; 
+            opacity: 0.086; 
+            filter: blur(5px);
+            left: -260px;
+            bottom: 160px; /* Исходная точка в левой средней части */
+            z-index: 1;
+            pointer-events: none; 
+            line-height: 1;
+        }
+
+        .walk-active {
+            animation: walkDiagonal 9s linear forwards;
+            animation-delay: 2s; /* Старт через 2 секунды после открытия текста */
+        }
+
+        @keyframes walkDiagonal {
+            0% { 
+                left: -260px; 
+                bottom: 160px; 
+                transform: rotate(-15deg); 
+            }
+            50% {
+                transform: rotate(0deg);
+            }
+            100% { 
+                left: 160px; 
+                bottom: -260px; /* Финиш за нижней границей, срезая угол */
+                transform: rotate(15deg); 
+            }
+        }
+
+        .reveal-box {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .options-grid { display: grid; gap: 10px; margin-top: 15px; }
+        .option-btn {
+            background: #ecf0f1; border: 1px solid #bdc3c7; padding: 12px;
+            border-radius: 6px; cursor: pointer; font-size: 1em; transition: 0.2s;
+        }
+        .option-btn:hover { background: #3498db; color: white; border-color: #3498db; }
+
+        .back-link { display: inline-block; margin-top: 20px; color: #7f8c8d; text-decoration: underline; font-size: 0.9em; text-align: center; width: 100%; }
+        .back-link:hover { color: #3498db; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div id="intro" class="section active">
+        <h1>Тест на концентрацию</h1>
+        <p>Сейчас на экране появится короткий текст о псевдонаучных концепциях.</p>
+        <p>Ваша задача: как можно быстрее и точнее посчитать, сколько раз в тексте встречается слово <b>«энергия»</b> (в любом падеже).</p>
+        <p style="color: #e74c3c; font-weight: bold;">У вас будет ровно 20 секунд. Затем текст исчезнет.</p>
+        <p>Сосредоточьтесь. Готовы?</p>
+        <button class="btn" onclick="startReading()">Начать отсчет</button>
+        <a href="https://livnet.ru" class="back-link">Вернуться на сайт livnet.ru</a>
+    </div>
+
+    <div id="reading" class="section">
+        <div id="timer" class="timer-box">20 секунд</div>
+        
+        <div class="text-reading-area">
+            <div class="distractor shape-circle"></div>
+            <div class="distractor shape-square"></div>
+            <div class="distractor shape-triangle"></div>
+
+            <div id="gorilla" class="gorilla-walker">🦍</div>
+            
+            <div class="text-content">
+                Концепция торсионных полей долгое время будоражила умы. Утверждалось, что скрытая энергия физического вакуума может быть использована для создания вечных двигателей. Псевдоученые заявляли, что эта энергия способна передавать данные мгновенно на любые расстояния. Комиссия по борьбе с лженаукой установила, что реальная энергия подобных полей строго равна нулю. Тем не менее, коммерсанты продолжают продавать чудо-генераторы, чья энергия якобы исцеляет любые болезни. Важно помнить, что настоящая наука требует строгих доказательств и расчетов. Мошенники же просто хотят, чтобы ваша финансовая энергия плавно перетекла в их бездонные карманы.
+            </div>
+        </div>
+    </div>
+
+    <div id="question1" class="section">
+        <h2>Время вышло!</h2>
+        <p>Введите количество раз, которое вам встретилось слово <b>энергия</b>:</p>
+        <input type="number" id="word-count" placeholder="Введите число..." min="0">
+        <button class="btn" onclick="submitCount()">Ответить</button>
+    </div>
+
+    <div id="question2" class="section">
+        <h2>Ответ принят. А теперь неожиданный вопрос...</h2>
+        <p>Вы очень внимательно считали слова. Но ответьте честно: <strong>кто прошел по экрану на фоне текста, пока вы читали?</strong></p>
+        
+        <div id="options-container" class="options-grid"></div>
+    </div>
+
+    <div id="reveal" class="section">
+        <h1 id="reveal-title"></h1>
+        <p id="count-result"></p>
+        <p id="gorilla-result"></p>
+        
+        <div class="reveal-box">
+            <p>Вы только что стали участником классического психологического эксперимента на <strong>«слепоту невнимания»</strong> (inattentional blindness).</p>
+            <p>Пока таймер тикал, а вы искали нужные слова, среди плавающих геометрических фигур по левому нижнему углу текстового поля наискосок медленно проплыл очень бледный силуэт гориллы (эмодзи 🦍).</p>
+            <p>Наш мозг обладает ограниченным ресурсом внимания. Когда мы жестко фокусируемся на одной задаче (считать слова) и видим очевидный визуальный шум (плавающие круги), мозг фильтрует всё, что происходит в периферийных зонах заднего плана. Из-за этого мы буквально слепнем и перестаем замечать замаскированные, но крупные детали.</p>
+        </div>
+
+        <p style="margin-top: 20px;">Подробнее о том, как мошенники используют эти баги нашего восприятия, читайте в <strong>Главе 3.5</strong> книги «Антинаука, как она есть».</p>
+        
+        <button class="btn" style="background: #2c3e50;" onclick="location.reload()">Пройти еще раз (и посмотреть на фокус)</button>
+        <a href="https://livnet.ru" class="back-link">Вернуться на главную livnet.ru</a>
+    </div>
+
+</div>
+
+<script>
+    let timerInterval;
+    let timeLeft = 20;
+    const correctCount = 5; 
+    let userCount = 0;
+
+    const surpriseOptions = [
+        { text: "Полупрозрачная обезьяна (горилла)", isGorilla: true },
+        { text: "Фиолетовый динозавр", isGorilla: false },
+        { text: "Привидение в простыне", isGorilla: false },
+        { text: "Крутящаяся звезда", isGorilla: false },
+        { text: "Кроме геометрических фигур там никого не было!", isGorilla: false } 
+    ];
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function startReading() {
+        showSection('reading');
+        timeLeft = 20;
+        const timerEl = document.getElementById('timer');
+        timerEl.innerText = `${timeLeft} секунд`;
+        timerEl.classList.remove('warning');
+        document.getElementById('word-count').value = ""; 
+
+        document.getElementById('gorilla').classList.add('walk-active');
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerEl.innerText = `${timeLeft} секунд`;
+            
+            if (timeLeft <= 5) {
+                timerEl.classList.add('warning');
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                document.getElementById('gorilla').classList.remove('walk-active');
+                showSection('question1');
+            }
+        }, 1000);
+    }
+
+    function submitCount() {
+        const inputVal = document.getElementById('word-count').value;
+        if (inputVal === "") return; 
+        userCount = parseInt(inputVal);
+        
+        renderShuffledOptions();
+        showSection('question2');
+    }
+
+    function renderShuffledOptions() {
+        const container = document.getElementById('options-container');
+        container.innerHTML = ''; 
+        
+        let currentOptions = [...surpriseOptions];
+        shuffleArray(currentOptions);
+
+        currentOptions.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt.text;
+            btn.onclick = () => submitSurprise(opt.isGorilla);
+            container.appendChild(btn);
+        });
+    }
+
+    function submitSurprise(sawGorilla) {
+        const titleEl = document.getElementById('reveal-title');
+        const countResEl = document.getElementById('count-result');
+        const gorillaResEl = document.getElementById('gorilla-result');
+
+        if (userCount === correctCount) {
+            countResEl.innerHTML = `Вы насчитали ${userCount} слов — <strong>это абсолютно верный ответ!</strong>`;
+        } else {
+            countResEl.innerHTML = `Вы насчитали ${userCount} слов (а на самом деле их было <strong>${correctCount}</strong>). В спешке легко ошибиться.`;
+        }
+
+        if (sawGorilla) {
+            titleEl.innerText = "Вы заметили гориллу! 🦍";
+            gorillaResEl.innerHTML = "Потрясающе! Ваше внимание не так-то просто взломать. Вы умудрились и выполнить сложную задачу, и разглядеть бледную гориллу, проскользнувшую в самом углу.";
+        } else {
+            titleEl.innerText = "А слона-то вы и не приметили 🙈";
+            gorillaResEl.innerHTML = "Вы не заметили гориллу! И это абсолютно нормально. Большинство людей выбирают вариант «Кроме геометрических фигур там никого не было», потому что траектория движения по углу идеально маскируется под смещение плавающих фигур.";
+        }
+
+        showSection('reveal');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
