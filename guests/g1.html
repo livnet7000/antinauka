@@ -1,1 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Квест: Ловушка Барнума</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            background: #f4f7f6; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+        .container { 
+            max-width: 600px; 
+            width: 100%;
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        }
+        h1 { color: #2c3e50; font-size: 1.5em; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+        h2 { color: #2c3e50; font-size: 1.2em; text-align: center;}
+        p { margin-bottom: 15px; }
+        
+        .section { display: none; animation: fadeIn 0.5s; }
+        .section.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
+        .btn { 
+            display: block; 
+            width: 100%; 
+            background: #3498db; 
+            color: #fff; 
+            border: none; 
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            font-size: 1em; 
+            cursor: pointer; 
+            transition: background 0.2s, transform 0.1s; 
+            margin-top: 20px;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn:hover { background: #2980b9; }
+        .btn:active { transform: scale(0.98); }
+        
+        .question { margin-bottom: 20px; }
+        .question label { display: block; margin-bottom: 8px; font-weight: bold; color: #444; }
+        .question select, .question input { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            font-size: 1em; 
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+        .question select:invalid {
+            color: #7f8c8d;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .rating-box { display: flex; justify-content: space-between; margin-top: 20px; }
+        .rating-btn {
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            flex: 1;
+            margin: 0 5px;
+            transition: 0.2s;
+        }
+        .rating-btn:hover { background: #3498db; color: white; border-color: #3498db; }
+
+        .reveal-box {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        .reveal-box.success {
+            background: #e8fdf0;
+            border-left-color: #2ecc71;
+        }
+        .reveal-box.neutral {
+            background: #fdfae8;
+            border-left-color: #f1c40f;
+        }
+        
+        .back-link { display: inline-block; margin-top: 20px; color: #7f8c8d; text-decoration: underline; font-size: 0.9em; text-align: center; width: 100%; }
+        .back-link:hover { color: #3498db; }
+        
+        .error-msg { color: #e74c3c; font-size: 0.9em; text-align: center; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- Экран 1: Вступление -->
+    <div id="intro" class="section active">
+        <h1>ИИ-система «CognitiveML»</h1>
+        <p>Перед вами новейшая психометрическая разработка на базе искусственного интеллекта и технологий машинного обучения. Наша нейросеть была натренирована на сотнях тысяч поведенческих паттернов.</p>
+        <p>Алгоритм способен провести глубокий анализ ваших когнитивных реакций и составить точный психологический портрет всего по семи ответам. <strong style="color: #e74c3c;">Важное условие: результат может быть получен только при даче максимально правдивых и искренних ответов.</strong> Готовы узнать, что ИИ скажет о вас?</p>
+        <button class="btn" onclick="showSection('test')">Пройти тест</button>
+        <a href="index.html" class="back-link">Вернуться к списку материалов</a>
+    </div>
+
+    <!-- Экран 2: Вопросы -->
+    <div id="test" class="section">
+        <h2>Ответьте не задумываясь:</h2>
+        
+        <div class="question">
+            <label>1. Ваша любимая геометрическая фигура?</label>
+            <select id="q1" required>
+                <option value="" disabled selected hidden>Выберите вариант...</option>
+                <option value="square">Квадрат (стабильность)</option>
+                <option value="circle">Круг (гармония)</option>
+                <option value="triangle">Треугольник (целеустремленность)</option>
+                <option value="zigzag">Зигзаг (креативность)</option>
+            </select>
+        </div>
+
+        <div class="question">
+            <label>2. Выберите время суток:</label>
+            <select id="q2" required>
+                <option value="" disabled selected hidden>Выберите вариант...</option>
+                <option value="morning">Раннее утро</option>
+                <option value="day">Яркий день</option>
+                <option value="evening">Спокойный вечер</option>
+                <option value="night">Глубокая ночь</option>
+            </select>
+        </div>
+
+        <div class="question">
+            <label>3. Если бы вы могли выбрать одну суперспособность, это была бы:</label>
+            <select id="q3" required>
+                <option value="" disabled selected hidden>Выберите вариант...</option>
+                <option value="fly">Способность летать</option>
+                <option value="mind">Чтение мыслей</option>
+                <option value="time">Управление временем</option>
+                <option value="invisible">Невидимость</option>
+            </select>
+        </div>
+
+        <div class="question">
+            <label>4. Какой пейзаж вас больше успокаивает?</label>
+            <select id="q4" required>
+                <option value="" disabled selected hidden>Выберите вариант...</option>
+                <option value="sea">Бескрайний океан</option>
+                <option value="mountains">Заснеженные горы</option>
+                <option value="forest">Густой зеленый лес</option>
+                <option value="field">Просторное поле</option>
+            </select>
+        </div>
+
+        <div class="question">
+            <label>5. Как вы обычно принимаете сложные решения?</label>
+            <select id="q5" required>
+                <option value="" disabled selected hidden>Выберите вариант...</option>
+                <option value="logic">Долго взвешиваю все "за" и "против"</option>
+                <option value="intuition">Доверяю внутреннему голосу и интуиции</option>
+                <option value="advice">Советуюсь с близкими людьми</option>
+                <option value="spontaneous">Решаю спонтанно в последний момент</option>
+            </select>
+        </div>
+
+        <div class="question">
+            <label>6. Каково ваше отношение к переменам в жизни?</label>
+            <select id="q6" required>
+                <option value="" disabled selected hidden>Выберите вариант...</option>
+                <option value="love">Обожаю пробовать новое и менять обстановку</option>
+                <option value="cautious">Осторожно присматриваюсь, прежде чем действовать</option>
+                <option value="stability">Предпочитаю стабильность и предсказуемость</option>
+                <option value="mood">Всё зависит исключительно от моего настроения</option>
+            </select>
+        </div>
+
+        <div class="question">
+            <label>7. Что для вас самое важное в общении с людьми?</label>
+            <select id="q7" required>
+                <option value="" disabled selected hidden>Выберите вариант...</option>
+                <option value="honesty">Абсолютная искренность и честность</option>
+                <option value="intellect">Интеллектуальная глубина бесед</option>
+                <option value="humor">Легкость и хорошее чувство юмора</option>
+                <option value="respect">Взаимоуважение и чувство такта</option>
+            </select>
+        </div>
+
+        <p id="error-message" class="error-msg">Пожалуйста, ответьте на все вопросы, чтобы ИИ смог составить профиль.</p>
+        <button class="btn" onclick="startAnalysis()">Анализировать ответы</button>
+    </div>
+
+    <!-- Экран 3: Имитация анализа -->
+    <div id="loading" class="section" style="text-align: center;">
+        <h2>Нейросеть обрабатывает данные...</h2>
+        <div class="loader"></div>
+        <p id="loading-text" style="color: #7f8c8d; font-size: 0.9em;">Сопоставление паттернов поведения...</p>
+    </div>
+
+    <!-- Экран 4: Выдача результата (Эффект Барнума) -->
+    <div id="result" class="section">
+        <h2>Ваш психологический портрет:</h2>
+        <p><i>«Вы очень нуждаетесь в том, чтобы другие люди любили и восхищались вами. Вы довольно самокритичны. У вас есть много скрытых возможностей, которые вы так и не использовали во благо себе.»</i></p>
+        <p><i>«Хотя у вас есть некоторые личные слабости, вы в общем способны их нивелировать. Дисциплинированный и уверенный с виду, на самом деле вы склонны волноваться и чувствовать неуверенность.»</i></p>
+        <p><i>«Временами вас охватывают серьезные сомнения, приняли ли вы правильное решение или сделали ли правильный поступок. Вы предпочитаете некоторое разнообразие, рамки и ограничения вызывают у вас недовольство.»</i></p>
+        
+        <div style="margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
+            <p style="text-align: center; font-weight: bold;">Насколько точно этот текст описывает лично вас?</p>
+            <div class="rating-box">
+                <button class="rating-btn" onclick="showReveal(1)">1 (Мимо)</button>
+                <button class="rating-btn" onclick="showReveal(2)">2</button>
+                <button class="rating-btn" onclick="showReveal(3)">3</button>
+                <button class="rating-btn" onclick="showReveal(4)">4</button>
+                <button class="rating-btn" onclick="showReveal(5)">5 (Точно!)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран 5: Разоблачение -->
+    <div id="reveal" class="section">
+        <h2 id="reveal-title">Результат эксперимента</h2>
+        <p>Вы оценили точность портрета на <strong id="user-score"></strong> из 5.</p>
+        
+        <div id="dynamic-reaction" class="reveal-box">
+            <!-- Сюда подставится текст в зависимости от оценки -->
+        </div>
+
+        <div style="margin-top: 20px;">
+            <p><strong>Правда в том</strong>, что никакого искусственного интеллекта и машинного обучения здесь нет. Текст, который вы только что прочитали, выдается <em>абсолютно всем</em> пользователям этого сайта, независимо от их ответов про фигуры и пейзажи.</p>
+            <p>Это классический текст из эксперимента психолога Бертрама Форера. То, с чем вы столкнулись, называется <strong>«Эффектом Барнума»</strong> — нашей склонностью воспринимать общие, размытые и банальные утверждения как точное описание нашей уникальной личности.</p>
+            <p>Именно на этом механизме зарабатывают астрологи, составители гороскопов, гадалки и экстрасенсы. Наш мозг сам находит совпадения там, где их нет, особенно когда нам говорят, что результат получен с помощью "сложных вычислений" или "древних знаний".</p>
+        </div>
+        <p style="margin-top: 20px;">Подробный разбор этого и других когнитивных искажений читайте в <strong>Главе 3.3</strong> книги «Антинаука, как она есть».</p>
+        
+        <a href="index.html" class="btn" style="background: #2c3e50;">Вернуться к материалам</a>
+    </div>
+
+</div>
+
+<script>
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function startAnalysis() {
+        // Проверка, что на все вопросы дан ответ
+        let allAnswered = true;
+        for (let i = 1; i <= 7; i++) {
+            if (!document.getElementById('q' + i).value) {
+                allAnswered = false;
+                break;
+            }
+        }
+
+        if (!allAnswered) {
+            document.getElementById('error-message').style.display = 'block';
+            return;
+        }
+        
+        document.getElementById('error-message').style.display = 'none';
+        showSection('loading');
+        
+        // Имитация работы "алгоритма"
+        const phrases = [
+            "Инициализация нейросети...",
+            "Анализ паттернов машинным обучением...",
+            "Синтез данных через скрытые слои ИИ...",
+            "Генерация уникального профиля..."
+        ];
+        
+        let counter = 0;
+        const textEl = document.getElementById('loading-text');
+        
+        const interval = setInterval(() => {
+            counter++;
+            if (counter < phrases.length) {
+                textEl.innerText = phrases[counter];
+            } else {
+                clearInterval(interval);
+                showSection('result');
+            }
+        }, 1200);
+    }
+
+    function showReveal(score) {
+        document.getElementById('user-score').innerText = score;
+        
+        const reactionBox = document.getElementById('dynamic-reaction');
+        const revealTitle = document.getElementById('reveal-title');
+        
+        // Сбрасываем классы оформления
+        reactionBox.className = 'reveal-box';
+
+        if (score >= 4) {
+            revealTitle.innerText = "Попались? 😉";
+            reactionBox.innerHTML = "<p><strong>Вы поверили алгоритму, и это абсолютно нормально!</strong> Вы только что на собственном опыте проверили, как работает когнитивная ловушка. Большинство людей ставят этому тексту оценки 4 и 5, искренне веря, что он написан специально про них.</p>";
+        } else if (score == 3) {
+            revealTitle.innerText = "Золотая середина 🤔";
+            reactionBox.classList.add('neutral');
+            reactionBox.innerHTML = "<p><strong>Вы проявили здоровую осторожность.</strong> Вы отнеслись к тексту со скепсисом, но всё же узнали себя в некоторых фразах. Именно на такую «частичную правоту» и рассчитывают мошенники: если из 10 фраз совпадут хотя бы три, человек начнет сомневаться.</p>";
+        } else {
+            revealTitle.innerText = "Браво! 🛡️";
+            reactionBox.classList.add('success');
+            reactionBox.innerHTML = "<p><strong>Ваш внутренний детектор бреда работает безупречно!</strong> Вы не позволили обмануть себя общими, расплывчатыми фразами и сразу заподозрили подвох. Вас будет очень сложно обмануть гадалкам и «ясновидящим».</p>";
+        }
+
+        showSection('reveal');
+        
+        // Плавный скролл наверх на случай мобильных устройств
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
