@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Квест: Следователь Комиссии</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            background: #eef2f5; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+        .container { 
+            max-width: 750px; 
+            width: 100%;
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        }
+        h1 { color: #2c3e50; font-size: 1.5em; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+        
+        .section { display: none; animation: fadeIn 0.4s; }
+        .section.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn { 
+            display: block; 
+            width: 100%; 
+            background: #3498db; 
+            color: #fff; 
+            border: none; 
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            font-size: 1em; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn:hover { background: #2980b9; }
+        
+        /* Сетка архива дел */
+        .cases-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .case-card {
+            background: #f9fbfd;
+            border: 1px solid #bdc3c7;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .case-card:hover { border-color: #3498db; background: #e8f4fd; }
+        .case-card.completed { background: #e8fdf0; border-color: #2ecc71; color: #27ae60; }
+        
+        @media (max-width: 500px) {
+            .cases-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Навигация внутри игры */
+        .game-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .btn-nav {
+            background: #ecf0f1; border: 1px solid #bdc3c7; color: #333;
+            padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9em;
+        }
+        .btn-nav:hover { background: #bdc3c7; }
+
+        .status-bar {
+            background: #2c3e50; color: white; padding: 12px; border-radius: 8px;
+            text-align: center; font-weight: bold; margin-bottom: 20px;
+        }
+        .score { font-size: 1.2em; color: #f1c40f; }
+
+        /* Документ */
+        .document-wrapper {
+            background: #fdfbf7; border: 1px solid #dcdde1; padding: 25px;
+            border-radius: 4px; font-family: "Georgia", serif; font-size: 1.1em;
+            line-height: 1.9; color: #2f3640; position: relative; overflow: hidden;
+        }
+        .doc-header {
+            text-align: center; font-weight: bold; text-transform: uppercase;
+            border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px;
+            font-family: sans-serif; font-size: 0.9em; color: #7f8c8d;
+        }
+
+        /* Фразы */
+        .suspect-phrase { cursor: pointer; border-bottom: 1px dashed #bdc3c7; transition: 0.2s; padding: 2px 0;}
+        .suspect-phrase:hover { background-color: #f1f2f6; border-bottom-color: #3498db; }
+        .phrase-found { background-color: #ffcccc !important; border-bottom: none; color: #c0392b; text-decoration: line-through; cursor: default; }
+        .phrase-normal { border-bottom: none; color: #7f8c8d; cursor: default; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-3px); } }
+        .shake-anim { display: inline-block; animation: shake 0.3s; }
+
+        .info-modal { display: none; background: #e8f4fd; border-left: 4px solid #3498db; padding: 15px; margin-top: 20px; border-radius: 0 8px 8px 0; }
+        .info-title { font-weight: bold; color: #2980b9; margin-bottom: 5px; }
+
+        .stamp {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg) scale(2);
+            color: rgba(231, 76, 60, 0.85); border: 8px solid rgba(231, 76, 60, 0.85); padding: 10px 20px;
+            font-size: 3em; font-weight: bold; font-family: 'Courier New', Courier, monospace; border-radius: 10px;
+            opacity: 0; pointer-events: none; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-transform: uppercase;
+        }
+        .stamp.show { opacity: 1; transform: translate(-50%, -50%) rotate(-15deg) scale(1); }
+        .back-link { display: inline-block; margin-top: 20px; color: #7f8c8d; text-decoration: underline; font-size: 0.9em; text-align: center; width: 100%; }
+        .back-link:hover { color: #3498db; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div id="menu" class="section active">
+        <h1>Комиссия по борьбе с лженаукой</h1>
+        <p>Добро пожаловать в архив! Перед вами 10 патентных заявок на подозрительные изобретения.</p>
+        <p><strong>Ваша задача:</strong> Изучить документ и кликнуть на <b>5 классических маркеров лженауки</b>, спрятанных в гуще технического текста, чтобы отклонить патент.</p>
+        
+        <div id="cases-grid" class="cases-grid">
+            </div>
+
+        <a href="https://livnet.ru" class="back-link">Вернуться на сайт livnet.ru</a>
+    </div>
+
+    <div id="game" class="section">
+        <div class="game-nav">
+            <button class="btn-nav" onclick="returnToMenu()">🏠 Вернуться в архив</button>
+            <div style="font-weight: bold; color: #7f8c8d;" id="current-case-title">Дело №1</div>
+        </div>
+        
+        <div class="status-bar">
+            <span>Маркеров лженауки найдено:</span>
+            <span class="score"><span id="found-count">0</span> / 5</span>
+        </div>
+
+        <div class="document-wrapper" id="document-area">
+            <div class="doc-header" id="doc-header-text">Заявка на патент</div>
+            <p><strong>Описание изобретения:</strong></p>
+            <p id="doc-content">
+                </p>
+            <div id="stamp" class="stamp">Отказано<br>Лженаука</div>
+        </div>
+
+        <div id="info-modal" class="info-modal">
+            <div id="info-title" class="info-title"></div>
+            <div id="info-text"></div>
+        </div>
+
+        <button id="btn-finish" class="btn" style="display: none; background: #2ecc71; margin-top: 20px;" onclick="showFinal()">Поставить печать и закрыть дело</button>
+    </div>
+
+    <div id="final" class="section">
+        <h1>Дело закрыто! ⚖️</h1>
+        <p>Блестящая работа! Вы выявили все уловки мошенников в этом документе, не позволив им обмануть вас сложными терминами.</p>
+        
+        <div style="background: #f9fbfd; border: 1px solid #dcdde1; padding: 15px; border-radius: 8px; margin-top: 20px; margin-bottom: 20px;">
+            <p>В реальной жизни отличать настоящую науку от подделки помогают строгие правила: <strong>принцип фальсифицируемости Поппера</strong> и <strong>Бритва Оккама</strong>.</p>
+            <p>Подробный разбор читайте в <strong>Главах 1.1 и 1.2</strong> книги «Антинаука, как она есть».</p>
+        </div>
+        
+        <button class="btn" onclick="returnToMenu()">Взять следующее дело из архива</button>
+    </div>
+
+</div>
+
+<script>
+    // База объяснений для маркеров лженауки
+    const explanations = {
+        'quantum': {
+            title: "Наукообразный бред (Word Salad)",
+            text: "Использование сложных терминов («квантовый», «торсионный», «скалярный», «вибрации») вне их реального физического смысла. Это делается, чтобы запутать покупателя и придать пустышке вес."
+        },
+        'antiquity': {
+            title: "Апелляция к древности",
+            text: "То, что знание «древнее» или «секретное», не делает его верным. Настоящая наука опирается на объективные эксперименты, а не на возраст традиций и мифы."
+        },
+        'panacea': {
+            title: "Панацея (Средство от всего)",
+            text: "В медицине не бывает лекарств «от абсолютно всех болезней». У каждого заболевания свой механизм. Если обещают исцеление сразу и от рака, и от кариеса — это обман."
+        },
+        'anecdotal': {
+            title: "Анекдотическое свидетельство",
+            text: "«Моей соседке помогло» — это не доказательство. Единичный случай не учитывает эффект плацебо и ошибку выжившего. Эффективность доказывается только массовыми слепыми исследованиями."
+        },
+        'conspiracy': {
+            title: "Теория заговора (Уловка Галилея)",
+            text: "Когда шарлатан не может доказать работу прибора, он заявляет, что «официальная наука и фарммафия всё скрывают». Это излюбленный аргумент для ухода от научной проверки."
+        }
+    };
+
+    // База из 10 дел (в каждом по 5 лженаучных и 7-8 нормальных предложений)
+    const casesData = [
+        {
+            title: "Дело №1: Био-Гармонизатор",
+            header: "Заявка №101 // Квантовый Био-Гармонизатор",
+            content: [
+                { t: "Прибор представляет собой портативное устройство весом 200 грамм, работающее от батареек.", type: "none" },
+                { t: "Корпус выполнен из гипоаллергенного пластика и оснащен информационным экраном.", type: "none" },
+                { t: "Для использования достаточно приложить его к груди на 15 минут в день.", type: "none" },
+                { t: "Устройство сертифицировано по стандарту пылевлагозащиты IP54.", type: "none" },
+                { t: "Гарантийный срок обслуживания составляет 12 месяцев со дня продажи.", type: "none" },
+                { t: "Прибор оснащен функцией автоматического отключения через 30 минут бездействия.", type: "none" },
+                { t: "В комплекте поставляется зарядное устройство с кабелем USB-C.", type: "none" },
+                { t: "Излучая торсионные микровибрации на частоте квантового резонанса ДНК, прибор перестраивает клетки.", type: "quantum" },
+                { t: "В основу легли утраченные секретные знания тибетских монахов, которые мы расшифровали.", type: "antiquity" },
+                { t: "Средство гарантированно излечивает от абсолютно всех известных науке заболеваний.", type: "panacea" },
+                { t: "Моя бабушка и её соседки стали чувствовать себя отлично уже после первого применения.", type: "anecdotal" },
+                { t: "Официальная медицина намеренно скрывает технологию, чтобы не потерять доходы от таблеток.", type: "conspiracy" }
+            ]
+        },
+        {
+            title: "Дело №2: Фильтр для воды",
+            header: "Заявка №102 // Структуризатор жидкости",
+            content: [
+                { t: "Данный фильтр устанавливается под стандартную кухонную мойку.", type: "none" },
+                { t: "Картридж устройства подлежит замене один раз в полгода.", type: "none" },
+                { t: "Устройство поставляется в картонной экологичной упаковке.", type: "none" },
+                { t: "Пропускная способность системы составляет до двух литров в минуту.", type: "none" },
+                { t: "Монтаж устройства не требует специальных сантехнических навыков.", type: "none" },
+                { t: "Максимальное рабочее давление в системе водоснабжения не должно превышать 6 атмосфер.", type: "none" },
+                { t: "Корпус фильтра изготовлен из пищевого полипропилена, устойчивого к перепадам температур.", type: "none" },
+                { t: "Он генерирует скалярное поле, которое полностью стирает негативную энергетическую память воды.", type: "quantum" },
+                { t: "Форма внутренних сот фильтра повторяет сакральную геометрию древних шумеров.", type: "antiquity" },
+                { t: "Употребление такой воды на 100% предотвращает рак, старение и аутизм.", type: "panacea" },
+                { t: "Собака моего соседа пила только эту воду и прожила рекордные 22 года.", type: "anecdotal" },
+                { t: "Правительство специально травит нас хлором через водоканал для контроля сознания, а наш фильтр это блокирует.", type: "conspiracy" }
+            ]
+        },
+        {
+            title: "Дело №3: Защита от 5G",
+            header: "Заявка №103 // Нейтрализатор излучений",
+            content: [
+                { t: "Наклейка имеет клеевой слой и крепится на заднюю панель любого смартфона.", type: "none" },
+                { t: "Толщина наклейки составляет всего 1.5 миллиметра.", type: "none" },
+                { t: "Срок годности изделия не ограничен.", type: "none" },
+                { t: "Поверхность наклейки устойчива к механическим повреждениям и царапинам.", type: "none" },
+                { t: "Изделие представлено в четырех цветовых вариантах оформления.", type: "none" },
+                { t: "Для надежной фиксации рекомендуется предварительно обезжирить поверхность устройства.", type: "none" },
+                { t: "Наклейка не препятствует беспроводной зарядке смартфона.", type: "none" },
+                { t: "Она блокирует деструктивные нейро-волны 5G путем создания обратной голографической интерференции.", type: "quantum" },
+                { t: "В состав полимера входит минерал, использовавшийся алхимиками Средневековья для защиты от порчи.", type: "antiquity" },
+                { t: "Изделие полностью снимает хроническую усталость, мигрени и восстанавливает зрение до единицы.", type: "panacea" },
+                { t: "Популярный видеоблогер приклеил её на роутер и сразу почувствовал прилив сил.", type: "anecdotal" },
+                { t: "Телекоммуникационные гиганты подкупают ученых, чтобы те отрицали вред сотовых вышек.", type: "conspiracy" }
+            ]
+        },
+        {
+            title: "Дело №4: Аудио-ДНК",
+            header: "Заявка №104 // Программа волновой генетики",
+            content: [
+                { t: "Аудиокурс поставляется на флеш-накопителе в стандартном формате MP3.", type: "none" },
+                { t: "Рекомендуется прослушивать записи в стереонаушниках перед сном.", type: "none" },
+                { t: "Громкость воспроизведения пользователь регулирует самостоятельно.", type: "none" },
+                { t: "Общий объем записанных материалов составляет более десяти часов.", type: "none" },
+                { t: "Файлы совместимы с большинством современных операционных систем.", type: "none" },
+                { t: "В приложении к курсу идет текстовое руководство в формате PDF.", type: "none" },
+                { t: "Интерфейс меню переведен на три европейских языка.", type: "none" },
+                { t: "Бинауральные аудио-ритмы осуществляют волновое перепрограммирование поврежденных участков ДНК.", type: "quantum" },
+                { t: "Мелодии основаны на расшифрованных песнопениях жрецов исчезнувшей Атлантиды.", type: "antiquity" },
+                { t: "Прослушивание курса гарантированно исцеляет от любых наследственных и врожденных патологий.", type: "panacea" },
+                { t: "Моя тетя слушала этот курс месяц, и у неё полностью рассосалась киста.", type: "anecdotal" },
+                { t: "Академия наук называет это мошенничеством, потому что звук нельзя запатентовать и продавать как дорогое лекарство.", type: "conspiracy" }
+            ]
+        },
+        {
+            title: "Дело №5: Квантовый Детокс",
+            header: "Заявка №105 // Травяной антипаразитарный сбор",
+            content: [
+                { t: "Сбор представляет собой сухую смесь измельченных трав весом 100 грамм.", type: "none" },
+                { t: "Смесь необходимо заваривать кипятком и настаивать 15 минут.", type: "none" },
+                { t: "Не рекомендуется употреблять напиток натощак.", type: "none" },
+                { t: "Срок годности сухой смеси составляет 24 месяца при соблюдении условий хранения.", type: "none" },
+                { t: "Упаковка оснащена многоразовым zip-замком для сохранения свежести продукта.", type: "none" },
+                { t: "Возможно наличие незначительного осадка при заваривании.", type: "none" },
+                { t: "Перед применением рекомендуется убедиться в отсутствии аллергии на компоненты сбора.", type: "none" },
+                { t: "Активные вещества очищают лимфатическую квантовую матрицу организма от токсинов.", type: "quantum" },
+                { t: "Рецепт был найден в секретном аюрведическом манускрипте, скрытом в пещерах Индии.", type: "antiquity" },
+                { t: "Отвар уничтожает 100% всех существующих вирусов, грибков и паразитов в теле человека.", type: "panacea" },
+                { t: "Мой знакомый выпил курс отвара, и у него прошел застарелый псориаз.", type: "anecdotal" },
+                { t: "Врачи специально врут, что паразитов у нас нет, чтобы мы покупали их химические антибиотики.", type: "conspiracy" }
+            ]
+        },
+        {
+            title: "Дело №6: Тахионный матрас",
+            header: "Заявка №106 // Энергетический спальный модуль",
+            content: [
+                { t: "Матрас выпускается в стандартных размерах для двуспальных и односпальных кроватей.", type: "none" },
+                { t: "Чехол изделия выполнен из натурального хлопка и подлежит деликатной стирке.", type: "none" },
+                { t: "Матрас выдерживает статичную нагрузку до 120 кг на одно спальное место.", type: "none" },
+                { t: "Изделие поставляется в скрученном виде в плотной вакуумной упаковке.", type: "none" },
+                { t: "Полное восстановление формы происходит в течение 24 часов после вскрытия.", type: "none" },
+                { t: "Жесткость матраса оценивается производителем как средняя.", type: "none" },
+                { t: "Наружный чехол застегивается на прочную круговую молнию.", type: "none" },
+                { t: "Встроенные нити улавливают энергию нулевой точки и генерируют тахионное поле.", type: "quantum" },
+                { t: "Структура слоев повторяет схему энергетических потоков из пирамиды Хеопса.", type: "antiquity" },
+                { t: "Сон на матрасе за одну ночь излечивает сколиоз, артрит и тяжелую депрессию.", type: "panacea" },
+                { t: "У моего брата болела спина 10 лет, но после ночи на этом матрасе он смог бегать марафон.", type: "anecdotal" },
+                { t: "Минздрав не сертифицирует это изделие, потому что ортопеды боятся остаться без работы.", type: "conspiracy" }
+            ]
+        },
+        {
+            title: "Дело №7: Астральная диета",
+            header: "Заявка №107 // Капсулы для похудения",
+            content: [
+                { t: "Препарат выпускается в виде желатиновых капсул по 30 штук в упаковке.", type: "none" },
+                { t: "Принимать следует строго по одной капсуле во время основного приема пищи.", type: "none" },
+                { t: "Хранить картонную упаковку нужно в сухом, темном месте.", type: "none" },
+                { t: "Капсулы не имеют ярко выраженного специфического вкуса и запаха.", type: "none" },
+                { t: "Рекомендуется обильно запивать препарат чистой негазированной водой.", type: "none" },
+                { t: "Блистерная упаковка надежно защищает продукт от воздействия влаги.", type: "none" },
+                { t: "Размер одной прозрачной капсулы составляет около 15 миллиметров в длину.", type: "none" },
+                { t: "Действующее вещество изменяет вибрационную частоту жировой ткани, расщепляя её на эфир.", type: "quantum" },
+                { t: "В состав входит корень дерева, который жевали шаманы майя для связи с духами.", type: "antiquity" },
+                { t: "Капсулы гарантируют снижение веса на 10 кг за 3 дня абсолютно без диет и спорта.", type: "panacea" },
+                { t: "Я выпила одну капсулу и к вечеру влезла в джинсы, которые не носила со школы.", type: "anecdotal" },
+                { t: "Фитнес-индустрия тратит миллионы на очернение нашего препарата, чтобы люди покупали абонементы в зал.", type: "conspiracy" }
+            ]
+        },
+        {
+            title: "Дело №8: Капли для Третьего Глаза",
+            header: "Заявка №108 // Активатор шишковидной железы",
+            content: [
+                { t: "Жидкость поставляется в затемненном стеклянном флаконе.", type: "none" },
+                { t: "Объем одного флакона составляет 50 миллилитров.", type: "none" },
+                { t: "Срок годности после первичного вскрытия крышки — 3 месяца.", type: "none" },
+                { t: "Перед использованием флакон необходимо тщательно встряхнуть.", type: "none" },
+                { t: "Крайне важно избегать попадания концентрированного раствора в глаза.", type: "none" },
+                { t: "Хранить тару требуется в недоступном для маленьких детей месте.", type: "none" },
+                { t: "Встроенный дозатор-пипетка позволяет точно отмерить необходимое количество капель.", type: "none" },
+                { t: "Капли растворяют нано-фторидные кристаллические барьеры в нейронах мозга.", type: "quantum" },
+                { t: "Формула возрождает утраченные практики левитации жителей древней Лемурии.", type: "antiquity" },
+                { t: "Средство мгновенно лечит СДВГ, деменцию и раскрывает экстрасенсорные способности.", type: "panacea" },
+                { t: "После двух дней приема капель я начал предвидеть будущее и читать мысли своего кота.", type: "anecdotal" },
+                { t: "Государство специально добавляет фтор в воду, чтобы заблокировать наше сознание и сделать рабами.", type: "conspiracy" }
+            ]
+        },
+        {
+            title: "Дело №9: Финансовый кристалл",
+            header: "Заявка №109 // Амулет изобилия",
+            content: [
+                { t: "Кристалл поставляется в плотном бархатном мешочке с кожаным шнурком.", type: "none" },
+                { t: "Вес изделия вместе с подвесом не превышает 50 грамм.", type: "none" },
+                { t: "Не рекомендуется подвергать кристалл длительному воздействию соленой воды.", type: "none" },
+                { t: "Цвет и фактура каждого изделия уникальны и могут отличаться от рекламных фото.", type: "none" },
+                { t: "Длина кожаного шнурка легко регулируется с помощью скользящего узла.", type: "none" },
+                { t: "При загрязнении рекомендуется бережно протирать поверхность сухой мягкой тканью.", type: "none" },
+                { t: "Изделие не содержит радиоактивных или токсичных примесей.", type: "none" },
+                { t: "Его грани резонируют с био-магнитной частотой золота, притягивая денежные потоки.", type: "quantum" },
+                { t: "Эти камни добываются в священных пещерах, где царь Соломон прятал свои сокровища.", type: "antiquity" },
+                { t: "Наличие амулета гарантированно решает все финансовые, семейные и проблемы со здоровьем.", type: "panacea" },
+                { t: "Я положил его в кошелек, и на следующий день неожиданно нашел на улице 5000 рублей.", type: "anecdotal" },
+                { t: "Элитные мировые банкиры изымают такие кристаллы из продажи, чтобы народ оставался в нищете.", type: "conspiracy" }
+            ]
+        },
+        {
+            title: "Дело №10: Голографический браслет",
+            header: "Заявка №110 // Нормализатор крови",
+            content: [
+                { t: "Браслет изготовлен из мягкого силикона и доступен в трех цветах.", type: "none" },
+                { t: "Длина ремешка легко регулируется под запястье любого размера.", type: "none" },
+                { t: "Изделие устойчиво к перепадам температур и прямому воздействию влаги.", type: "none" },
+                { t: "Металлическая застежка выполнена из прочной нержавеющей стали.", type: "none" },
+                { t: "Изделие подходит для ежедневного ношения, в том числе в бассейне.", type: "none" },
+                { t: "В случае необходимости лишнюю часть ремешка можно отрезать ножницами.", type: "none" },
+                { t: "Габариты браслета не мешают параллельному использованию наручных часов.", type: "none" },
+                { t: "Встроенный чип излучает скалярные волны, которые реструктурируют эритроциты в правильные цепочки.", type: "quantum" },
+                { t: "Принцип работы браслета основан на секретных знаниях алхимиков династии Мин.", type: "antiquity" },
+                { t: "Устройство полностью очищает кровь от всех токсинов, вирусов, тяжелых металлов и микропластика.", type: "panacea" },
+                { t: "Мой дядя поносил браслет неделю, и его анализы крови стали идеальными, как у младенца.", type: "anecdotal" },
+                { t: "ВОЗ запрещает рекламу браслета, потому что абсолютно здоровые люди невыгодны медицинской мафии.", type: "conspiracy" }
+            ]
+        }
+    ];
+
+    let currentCaseIndex = 0;
+    let foundCount = 0;
+    let completedCases = [];
+
+    // Инициализация меню
+    function initMenu() {
+        const grid = document.getElementById('cases-grid');
+        grid.innerHTML = '';
+        
+        casesData.forEach((caseData, index) => {
+            const btn = document.createElement('div');
+            btn.className = 'case-card' + (completedCases.includes(index) ? ' completed' : '');
+            btn.innerHTML = completedCases.includes(index) ? caseData.title + ' ✅' : caseData.title;
+            btn.onclick = () => loadCase(index);
+            grid.appendChild(btn);
+        });
+    }
+
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function returnToMenu() {
+        initMenu();
+        showSection('menu');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Перемешивание фраз в абзаце
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    // Загрузка конкретного дела
+    function loadCase(index) {
+        currentCaseIndex = index;
+        foundCount = 0;
+        document.getElementById('found-count').innerText = 0;
+        
+        const cData = casesData[index];
+        document.getElementById('current-case-title').innerText = cData.title;
+        document.getElementById('doc-header-text').innerText = cData.header;
+        
+        const contentDiv = document.getElementById('doc-content');
+        contentDiv.innerHTML = '';
+
+        // Копируем и перемешиваем предложения, чтобы они не шли в одном порядке
+        let shuffledContent = [...cData.content];
+        shuffleArray(shuffledContent);
+
+        shuffledContent.forEach(item => {
+            const span = document.createElement('span');
+            span.className = 'suspect-phrase';
+            span.innerText = item.t + ' ';
+            span.onclick = function() { checkPhrase(this, item.type); };
+            contentDiv.appendChild(span);
+        });
+
+        // Сброс UI элементов
+        document.getElementById('stamp').classList.remove('show');
+        document.getElementById('btn-finish').style.display = 'none';
+        document.getElementById('info-modal').style.display = 'none';
+
+        showSection('game');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function checkPhrase(element, type) {
+        if (element.classList.contains('phrase-found') || element.classList.contains('phrase-normal')) return;
+
+        const modal = document.getElementById('info-modal');
+        const titleEl = document.getElementById('info-title');
+        const textEl = document.getElementById('info-text');
+
+        if (type !== 'none') {
+            // Нашли лженауку
+            element.classList.add('phrase-found');
+            foundCount++;
+            document.getElementById('found-count').innerText = foundCount;
+
+            modal.style.display = 'block';
+            modal.style.borderLeftColor = '#e74c3c';
+            titleEl.style.color = '#c0392b';
+            titleEl.innerText = "Улика найдена: " + explanations[type].title;
+            textEl.innerHTML = explanations[type].text;
+
+            if (foundCount === 5) {
+                setTimeout(() => {
+                    document.getElementById('stamp').classList.add('show');
+                    document.getElementById('btn-finish').style.display = 'block';
+                    modal.style.display = 'none';
+                }, 800);
+            }
+        } else {
+            // Кликнули на нормальный текст
+            element.classList.add('shake-anim');
+            element.classList.add('phrase-normal');
+            
+            setTimeout(() => { element.classList.remove('shake-anim'); }, 300);
+
+            modal.style.display = 'block';
+            modal.style.borderLeftColor = '#bdc3c7';
+            titleEl.style.color = '#7f8c8d';
+            titleEl.innerText = "Нет, это нормальный текст";
+            textEl.innerHTML = "В этом предложении нет антинаучных утверждений. Ищите другие зацепки!";
+        }
+    }
+
+    function showFinal() {
+        if (!completedCases.includes(currentCaseIndex)) {
+            completedCases.push(currentCaseIndex);
+        }
+        showSection('final');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Старт
+    initMenu();
+
+</script>
+
+</body>
+</html>
