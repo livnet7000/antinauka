@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Квест: Ошибка выжившего</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            background: #eef2f5; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+        .container { 
+            max-width: 750px; 
+            width: 100%;
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        }
+        h1 { color: #2c3e50; font-size: 1.5em; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+        
+        .section { display: none; animation: fadeIn 0.4s; }
+        .section.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn { 
+            display: block; 
+            width: 100%; 
+            background: #3498db; 
+            color: #fff; 
+            border: none; 
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            font-size: 1.05em; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            text-align: center;
+            text-decoration: none;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .btn:hover { background: #2980b9; }
+        .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        /* Инструкция и счетчик */
+        .task-box {
+            background: #f9fbfd;
+            border-left: 4px solid #f39c12;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+            font-size: 1.05em;
+        }
+        .counter-badge {
+            display: inline-block;
+            background: #f39c12;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .counter-badge.full { background: #2ecc71; }
+
+        /* Контейнер для изображения и интерактивных зон */
+        .image-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .image-container img {
+            width: 100%;
+            display: block;
+            pointer-events: none; /* Чтобы клики проходили к зонам */
+        }
+
+        /* Интерактивные зоны поверх картинки */
+        .hitbox {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px dashed rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .hitbox:hover {
+            background: rgba(52, 152, 219, 0.4);
+            border-color: #3498db;
+        }
+        .hitbox.selected {
+            background: rgba(46, 204, 113, 0.6); /* Зеленый цвет брони */
+            border: 2px solid #2ecc71;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
+        }
+        
+        /* Текст внутри зон */
+        .hitbox span {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* Позиционирование зон (настроено под загруженную картинку plane5.png) */
+        #zone-cockpit { top: 50%; left: 10%; width: 20%; height: 12%; }
+        #zone-engines { top: 55%; left: 35%; width: 25%; height: 35%; }
+        #zone-wings   { top: 25%; left: 10%; width: 35%; height: 20%; }
+        #zone-fuselage{ top: 35%; left: 45%; width: 20%; height: 25%; }
+        #zone-tail    { top: 15%; left: 65%; width: 25%; height: 25%; }
+
+        /* Экраны результатов */
+        .reveal-box {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+            font-size: 1.05em;
+        }
+        .reveal-box.fail { background: #fdf0f0; border-left-color: #e74c3c; }
+        .reveal-box.success { background: #e8fdf0; border-left-color: #2ecc71; }
+
+        .back-link { display: inline-block; margin-top: 20px; color: #7f8c8d; text-decoration: underline; font-size: 0.9em; text-align: center; width: 100%; }
+        .back-link:hover { color: #3498db; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div id="intro" class="section active">
+        <h1>Секретный отдел статистики</h1>
+        <p>Идет Вторая мировая война. Вы — аналитик, работающий в центре ВВС. Командование поставило критическую задачу: <strong>снизить потери бомбардировщиков B-17</strong>.</p>
+        <p>Перед вами на фото бомбардировщик «Heavenly Body», только что вернувшийся с боевого вылета на аэродром. Весь его фюзеляж, хвост и крылья изрешечены пулями и осколками зенитных снарядов.</p>
+        <p>Генералы требуют укрепить самолеты броней. Но броня тяжелая: если забронировать весь самолет, он не взлетит. У вас есть ресурсы, чтобы укрепить только часть машины.</p>
+        <button class="btn" onclick="showSection('game')">Перейти к анализу повреждений</button>
+        <a href="https://livnet.ru" class="back-link">Вернуться на главную livnet.ru</a>
+    </div>
+
+    <div id="game" class="section">
+        
+        <div class="task-box">
+            Кликните прямо по фото и выберите <strong>ровно 2 зоны</strong>, которые нужно укрепить броней в первую очередь.
+            <span id="zone-counter" class="counter-badge">Выбрано: 0/2</span>
+        </div>
+
+        <div class="image-container">
+            <img src="plane5.png" alt="B-17 Bomber on Airfield">
+            
+            <div id="zone-cockpit" class="hitbox" onclick="toggleZone('cockpit')"><span>Кабина</span></div>
+            <div id="zone-engines" class="hitbox" onclick="toggleZone('engines')"><span>Двигатели</span></div>
+            <div id="zone-wings" class="hitbox" onclick="toggleZone('wings')"><span>Крыло</span></div>
+            <div id="zone-fuselage" class="hitbox" onclick="toggleZone('fuselage')"><span>Фюзеляж</span></div>
+            <div id="zone-tail" class="hitbox" onclick="toggleZone('tail')"><span>Хвост</span></div>
+        </div>
+
+        <button id="btn-submit" class="btn" disabled onclick="checkAnswer()">Утвердить чертеж бронирования</button>
+        <button class="btn" style="background: #ecf0f1; color: #7f8c8d; margin-top: 10px;" onclick="returnToStart()">Сбросить и начать заново</button>
+    </div>
+
+    <div id="reveal" class="section">
+        <h1 id="reveal-title"></h1>
+        <div id="reveal-content" class="reveal-box"></div>
+
+        <div style="margin-top: 20px; background: #fdfbf7; padding: 15px; border-radius: 8px; border: 1px solid #dcdde1;">
+            <p>Этот реальный исторический случай дал название термину <strong>«Ошибка выжившего»</strong>. Мы склонны делать выводы только по тем данным, которые нам доступны («выжившим»), забывая о тех, кто не дошел до финиша.</p>
+            <p>В мире псевдонауки это работает безотказно:</p>
+            <ul>
+                <li><strong>«Мой дед пил керосин и дожил до 90 лет»</strong> — ошибка выжившего. Мы не видим миллионы людей, которые от этого умерли, они не могут написать комментарий.</li>
+                <li><strong>«Раньше рожали в поле и были здоровее»</strong> — ошибка выжившего. Мы смотрим на здоровых предков, забывая о колоссальной младенческой смертности тех лет.</li>
+                <li><strong>«Этот экстрасенс исцелил меня!»</strong> — ошибка выжившего. 99% его клиентов не получили результата, поэтому вы видите восторженные отзывы только того 1%, у кого случилась спонтанная ремиссия.</li>
+            </ul>
+        </div>
+        
+        <p style="margin-top: 20px; text-align: center;">Подробный разбор того, как статистика обманывает наш мозг, читайте в книге <strong>«Антинаука, как она есть»</strong>.</p>
+        
+        <button class="btn" style="background: #2c3e50;" onclick="returnToStart()">Пройти квест еще раз</button>
+        <a href="https://livnet.ru" class="back-link">Вернуться на сайт livnet.ru</a>
+    </div>
+
+</div>
+
+<script>
+    let selectedZones = [];
+    
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function toggleZone(zoneId) {
+        const el = document.getElementById('zone-' + zoneId);
+        const index = selectedZones.indexOf(zoneId);
+
+        if (index > -1) {
+            // Снимаем выделение
+            selectedZones.splice(index, 1);
+            el.classList.remove('selected');
+        } else {
+            // Добавляем выделение (максимум 2)
+            if (selectedZones.length < 2) {
+                selectedZones.push(zoneId);
+                el.classList.add('selected');
+            } else {
+                const badge = document.getElementById('zone-counter');
+                badge.style.animation = "shake 0.3s";
+                setTimeout(() => badge.style.animation = "", 300);
+            }
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        const counter = document.getElementById('zone-counter');
+        const submitBtn = document.getElementById('btn-submit');
+        
+        counter.innerText = `Выбрано: ${selectedZones.length}/2`;
+        
+        if (selectedZones.length === 2) {
+            counter.classList.add('full');
+            submitBtn.disabled = false;
+        } else {
+            counter.classList.remove('full');
+            submitBtn.disabled = true;
+        }
+    }
+
+    function checkAnswer() {
+        const titleEl = document.getElementById('reveal-title');
+        const contentEl = document.getElementById('reveal-content');
+        const revealBox = document.getElementById('reveal-content');
+
+        // Правильный ответ: Кабина и Двигатели (там, где на картинке НЕТ пробоин)
+        const isCorrect = selectedZones.includes('cockpit') && selectedZones.includes('engines');
+        
+        revealBox.className = 'reveal-box';
+
+        if (isCorrect) {
+            titleEl.innerText = "Гениально! Вы спасли пилотов 🎯";
+            revealBox.classList.add('success');
+            contentEl.innerHTML = `
+                <p>Вы разгадали ловушку! Вы поняли, что красные пятна пробоин — это места, повреждение которых <strong>не смертельно</strong>.</p>
+                <p>Самолеты, получившие сотни пуль в крылья и фюзеляж, смогли долететь до базы (как этот на фото). А вот те самолеты, которым снаряд попал в двигатель или кабину пилота, <strong>разбились и не вернулись</strong>. Поэтому на фото там нет пробоин.</p>
+                <p>Вы забронировали именно уязвимые, «чистые» места, сохранив тысячи жизней.</p>
+            `;
+        } else {
+            titleEl.innerText = "Провал операции... 💥";
+            revealBox.classList.add('fail');
+            contentEl.innerHTML = `
+                <p>Вы совершили классическую логическую ошибку. Вы приказали укрепить те места, где больше всего видимых пробоин (крылья, фюзеляж, хвост).</p>
+                <p>Но посмотрите на фото: этот самолет вернулся на базу изрешеченным. Значит, он <strong>способен летать</strong> с такими повреждениями!</p>
+                <p>А где пробоины у тех самолетов, которые разбились? Правильно, в двигателях и кабине. Самолет с пробитым двигателем просто не долетел до вашего аэродрома. Укрепив места с дырками, вы повесили на самолет бесполезный вес и оставили его уязвимым.</p>
+            `;
+        }
+
+        showSection('reveal');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function returnToStart() {
+        selectedZones.forEach(zoneId => {
+            document.getElementById('zone-' + zoneId).classList.remove('selected');
+        });
+        selectedZones = [];
+        updateUI();
+        
+        showSection('intro');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
